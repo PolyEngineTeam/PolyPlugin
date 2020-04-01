@@ -24,7 +24,7 @@ namespace pp
 		// version used by the loaded plugin will be compared to this 
 		// one and if they differ the plugin will be ignored and 
 		// deleted
-		static inline Version polyPluginVersion = { 0, 1, 0 };
+		static inline Version polyPluginVersion = { 1, 0, 0 };
 
 		// Default ctor. If not provided the IntentRouter will be 
 		// created automatically.

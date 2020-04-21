@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1.0)
+cmake_minimum_required(VERSION 3.13.0)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 ##
@@ -37,6 +37,15 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${FULL_DIST_DIR})
 # C++ standard 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# SWIG
+find_package(SWIG REQUIRED)
+include(${SWIG_USE_FILE})
+set(CMAKE_SWIG_FLAGS "")
+
+# Python
+FIND_PACKAGE(PythonLibs)
+include_directories(${PYTHON_INCLUDE_PATH})
 
 set(POLYPLUGIN_TARGET PolyPlugin)
 set(CALCULATOR_PLUGIN_API_TARGET CalculatorPluginAPI)

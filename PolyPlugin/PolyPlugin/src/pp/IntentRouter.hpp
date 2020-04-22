@@ -47,7 +47,7 @@ namespace pp
 		// Unregisters all receivers registered with given plugin info.
 		// @param info - info from plugin which intent receivers should
 		//		be removed
-		void unregisterReceivers(PluginInfo info);
+		void unregisterReceivers(PluginInfo info) { assert(false); }
 
 		// This method is used for intents dispatching. When it's 
 		// called it asks receiver selector which intent receiver 
@@ -112,12 +112,6 @@ namespace pp
 	}
 
 	//-------------------------------------------------------------------------------------------------------
-	void unregisterReceivers(PluginInfo info)
-	{
-		assert(false); // implement this
-	}
-
-	//-------------------------------------------------------------------------------------------------------
 	template<typename T>
 	inline std::optional<typename T::Result> IntentRouter::processIntent(T intent)
 	{
@@ -131,5 +125,5 @@ namespace pp
 		else
 			return {};
 	}
-	
+
 } // namespace pp

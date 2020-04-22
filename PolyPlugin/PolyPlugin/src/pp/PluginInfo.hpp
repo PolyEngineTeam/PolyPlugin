@@ -25,7 +25,7 @@ namespace pp
 	class PluginInfo
 	{
 	public:
-		const std::string name;
-		const Version version;
+		std::string name;
+		Version version;
 	};
 }

@@ -23,16 +23,43 @@ set(POLY_PLUGIN_ROOT_DIR ${CMAKE_SOURCE_DIR})
 set(DIST_DIR "${POLY_PLUGIN_ROOT_DIR}/../Dist")
 set(COMMON_BUILD_DIR "${POLY_PLUGIN_ROOT_DIR}/../CommonBuild")
 
-# Output dirs
-if (WIN32)
-	set(FULL_DIST_DIR "${DIST_DIR}") # Config name is added autmatically on windows
-else()
-	set(FULL_DIST_DIR "${DIST_DIR}/${BUILD_CONFIG_NAME}")
+
+
+##normalize build type settings
+string(STRIP "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE)
+if(NOT CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL "")
+	message(STATUS "Setting build type to Debug as none was specified")
+	set(CMAKE_BUILD_TYPE "Debug")
+elseif(NOT CMAKE_BUILD_TYPE MATCHES "(^Debug$|^DebugFast$|^Testing$|^Release$)")
+	message(WARNING "Invalid build type \"${CMAKE_BUILD_TYPE}\" specified!\nValid values are: Debug, DebugFast, Testing, Release.\nDefaulting to Debug.")
+	set(CMAKE_BUILD_TYPE "Debug")
 endif()
+
+if (DEFINED CMAKE_CONFIGURATION_TYPES AND NOT ${CMAKE_CFG_INTDIR} STREQUAL ".")
+  # multi-config handling
+  set (BUILD_CONFIG_NAME ${CMAKE_CFG_INTDIR})
+else()
+  # mono config handling
+  set (BUILD_CONFIG_NAME ${CMAKE_BUILD_TYPE})
+endif()
+message("Build configuration name: ${BUILD_CONFIG_NAME}")
+
+# Output dirs
+if (DEFINED DIST_DIR)
+	if (WIN32)
+		set(FULL_DIST_DIR "${DIST_DIR}") # Config name is added autmatically on windows
+	else()
+		set(FULL_DIST_DIR "${DIST_DIR}/${BUILD_CONFIG_NAME}")
+	endif()
 	
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${FULL_DIST_DIR})
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${FULL_DIST_DIR})
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${FULL_DIST_DIR})
+	set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${FULL_DIST_DIR})
+	set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${FULL_DIST_DIR})
+	set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${FULL_DIST_DIR})
+else()
+	message(ERROR "DIST_DIR not defined!")
+endif ()
+
+
 
 # C++ standard 
 set(CMAKE_CXX_STANDARD 17)
@@ -42,6 +69,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(SWIG REQUIRED)
 include(${SWIG_USE_FILE})
 set(CMAKE_SWIG_FLAGS "")
+set(CMAKE_SWIG_OUTDIR "${DIST_DIR}/${BUILD_CONFIG_NAME}")
+message( ${BUILD_CONFIG_NAME} )
 
 # Python
 FIND_PACKAGE(PythonLibs)

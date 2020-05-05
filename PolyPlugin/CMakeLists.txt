@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1.0)
+cmake_minimum_required(VERSION 3.8.0)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 ##
@@ -17,7 +17,13 @@ endfunction()
 ##
 # Start
 ##
-project(PolyPlugin)
+project(PolyPlugin VERSION "1.0.0")
+
+configure_file(
+	"${PROJECT_SOURCE_DIR}/config/CmakeConfig.hpp.in" 
+	"${PROJECT_BINARY_DIR}/config/CmakeConfig.hpp"
+)
+include_directories("${PROJECT_BINARY_DIR}/config")
 
 set(POLY_PLUGIN_ROOT_DIR ${CMAKE_SOURCE_DIR})
 set(DIST_DIR "${POLY_PLUGIN_ROOT_DIR}/../Dist")

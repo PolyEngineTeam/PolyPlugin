@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <windows.h>
 
+#include <CmakeConfig.hpp>
 #include <pp/IntentRouter.hpp>
 
 namespace pp
@@ -24,7 +25,7 @@ namespace pp
 		// version used by the loaded plugin will be compared to this 
 		// one and if they differ the plugin will be ignored and 
 		// deleted
-		static inline Version polyPluginVersion = { 1, 0, 0 };
+		static inline Version polyPluginVersion = { PROJECT_VER_MAJOR, PROJECT_VER_MINOR, PTOJECT_VER_PATCH };
 
 		// Default ctor. If not provided the IntentRouter will be 
 		// created automatically.

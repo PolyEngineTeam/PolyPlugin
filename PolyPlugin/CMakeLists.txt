@@ -1,49 +1,25 @@
-cmake_minimum_required(VERSION 3.1.0)
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+#################################################
+# build instructions
+#################################################
 
-##
-# Function that generates source groups
-##
-function(GenerateSourceGoups Sources)
-	foreach(Source ${Sources})
-		get_filename_component(SourcePath "${Source}" PATH)
-		if (WIN32)
-			string(REPLACE "/" "\\" SourcePath "${SourcePath}")
-		endif()
-		source_group("${SourcePath}" FILES "${Source}")
-	endforeach()
-endfunction()
+# Include dir
+set(POLYPLUGIN_INCLUDE ${CMAKE_CURRENT_LIST_DIR}/src)
 
-##
-# Start
-##
-project(PolyPlugin)
+# gather source files list
+file(GLOB_RECURSE POLYPLUGIN_SRCS RELATIVE ${CMAKE_CURRENT_LIST_DIR}
+    ${POLYPLUGIN_INCLUDE}/*.cpp 
+    ${POLYPLUGIN_INCLUDE}/*.hpp 
+    ${POLYPLUGIN_INCLUDE}/*.h)
+GenerateSourceGoups("${POLYPLUGIN_SRCS}")
 
-set(POLY_PLUGIN_ROOT_DIR ${CMAKE_SOURCE_DIR})
-set(DIST_DIR "${POLY_PLUGIN_ROOT_DIR}/../Dist")
-set(COMMON_BUILD_DIR "${POLY_PLUGIN_ROOT_DIR}/../CommonBuild")
+# add library and custom target so the header files will be visible in the IDE
+add_library(${POLYPLUGIN_TARGET} INTERFACE)
+add_custom_target(${POLYPLUGIN_TARGET}_ SOURCES ${POLYPLUGIN_SRCS})
 
-# Output dirs
-if (WIN32)
-	set(FULL_DIST_DIR "${DIST_DIR}") # Config name is added autmatically on windows
-else()
-	set(FULL_DIST_DIR "${DIST_DIR}/${BUILD_CONFIG_NAME}")
-endif()
-	
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${FULL_DIST_DIR})
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${FULL_DIST_DIR})
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${FULL_DIST_DIR})
+# require C++17 support
+target_compile_features(${POLYPLUGIN_TARGET} INTERFACE cxx_std_17)
 
-# C++ standard 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-set(POLYPLUGIN_TARGET PolyPlugin)
-set(CALCULATOR_PLUGIN_API_TARGET CalculatorPluginAPI)
-set(CALCULATOR_PLUGIN_TARGET CalculatorPlugin)
-set(TEST_APP_TARGET TestApp)
-
-add_subdirectory(PolyPlugin)
-add_subdirectory(CalculatorPluginAPI)
-add_subdirectory(CalculatorPlugin)
-add_subdirectory(TestApp)
+# set target include directories
+target_include_directories(${POLYPLUGIN_TARGET} INTERFACE
+    $<BUILD_INTERFACE:${POLYPLUGIN_INCLUDE}>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)

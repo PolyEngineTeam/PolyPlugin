@@ -18,7 +18,7 @@ int main()
 	}
     
 	AddIntent intent{ 2, 3 };
-	std::optional<AddIntent::Result> result = container.getIntentRouter()->processIntent(std::move(intent));
+	std::optional<AddIntent::Result> result = container.getRouter()->processIntent(std::move(intent));
 	if (result.has_value())
 		std::cout << "2 + 3 = " << result.value() << std::endl;
 	else

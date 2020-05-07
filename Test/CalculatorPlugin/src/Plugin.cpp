@@ -8,12 +8,12 @@
 class Plugin : public pp::IPlugin
 {
 public:
-	void init(std::shared_ptr<pp::IntentRouter> router) final
+	void init(std::shared_ptr<pp::Router> router) final
 	{
-		router->registerReceiver<AddIntent>(getPluginInfo(), [this] (AddIntent intent) { return addIntentReceiver(std::move(intent)); });
+		router->registerIntentHandler<AddIntent>(getPluginInfo(), [this] (AddIntent intent) { return addIntentReceiver(std::move(intent)); });
 	}
 
-	void deinit(std::shared_ptr<pp::IntentRouter> router) final { }
+	void deinit(std::shared_ptr<pp::Router> router) final { }
 	pp::PluginInfo getPluginInfo() const final { return { "Calculator", { 1, 0, 0} }; }
 
 private:

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8.0)
+cmake_minimum_required(VERSION 3.12)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 ##
@@ -18,6 +18,7 @@ endfunction()
 # Start
 ##
 project(PolyPlugin VERSION "1.0.0")
+include(GNUInstallDirs)
 
 configure_file(
 	"${PROJECT_SOURCE_DIR}/config/CmakeConfig.hpp.in" 
@@ -53,3 +54,36 @@ add_subdirectory(PolyPlugin)
 add_subdirectory(CalculatorPluginAPI)
 add_subdirectory(CalculatorPlugin)
 add_subdirectory(TestApp)
+
+
+
+#################################################
+# installation instructions
+#################################################
+
+install(TARGETS ${POLYPLUGIN_TARGET}
+    EXPORT ${POLYPLUGIN_TARGET}_Targets
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file("${POLYPLUGIN_TARGET}ConfigVersion.cmake"
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion)
+
+configure_package_config_file(
+    "${PROJECT_SOURCE_DIR}/cmake/${POLYPLUGIN_TARGET}Config.cmake.in"
+    "${PROJECT_BINARY_DIR}/${POLYPLUGIN_TARGET}Config.cmake"
+	INSTALL_DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${POLYPLUGIN_TARGET}/cmake)
+
+install(EXPORT ${POLYPLUGIN_TARGET}_Targets
+	FILE ${POLYPLUGIN_TARGET}Targets.cmake
+	NAMESPACE ${POLYPLUGIN_TARGET}::
+	DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${POLYPLUGIN_TARGET}/cmake)
+
+install(FILES "${PROJECT_BINARY_DIR}/${POLYPLUGIN_TARGET}Config.cmake"
+	"${PROJECT_BINARY_DIR}/${POLYPLUGIN_TARGET}ConfigVersion.cmake"
+	DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${POLYPLUGIN_TARGET}/cmake)
+	
+install(DIRECTORY ${POLYPLUGIN_INCLUDE} DESTINATION include)

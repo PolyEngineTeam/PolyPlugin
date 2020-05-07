@@ -4,7 +4,7 @@
 #include <windows.h>
 
 #include <CmakeConfig.hpp>
-#include <pp/IntentRouter.hpp>
+#include <pp/Router.hpp>
 
 namespace pp
 {
@@ -16,7 +16,7 @@ namespace pp
 	// The main class of this library. It allows user to load plugins 
 	// from directory or path and get the intent router to dispatch 
 	// some intents. It also owns the IPlugin instances whereas 
-	// IntentRouter only routes intents to correct handlers.
+	// Router only routes intents to correct handlers.
 	class PluginsContainer
 	{
 	public:
@@ -27,15 +27,15 @@ namespace pp
 		// deleted
 		static inline Version polyPluginVersion = { PROJECT_VER_MAJOR, PROJECT_VER_MINOR, PTOJECT_VER_PATCH };
 
-		// Default ctor. If not provided the IntentRouter will be 
+		// Default ctor. If not provided the Router will be 
 		// created automatically.
-		PluginsContainer() : m_intentRouter(std::make_shared<IntentRouter>()) {}
+		PluginsContainer() : m_Router(std::make_shared<Router>()) {}
 		
 		// If the user needs custom intent router it can be provided in
 		// this ctor and it will be used instead of the default one
 		// @param router - customized router that should be used by 
 		//		this container
-		PluginsContainer(std::shared_ptr<IntentRouter> router) : m_intentRouter(std::move(router)) {}
+		PluginsContainer(std::shared_ptr<Router> router) : m_Router(std::move(router)) {}
 
 		~PluginsContainer();
 
@@ -54,11 +54,11 @@ namespace pp
 		// @returns intent router. Returned router is used to 
 		//		initialize all plugins that were loaded or will be 
 		//		loaded
-		const std::shared_ptr<IntentRouter>& getIntentRouter() const { return m_intentRouter; }
+		const std::shared_ptr<Router>& getRouter() const { return m_Router; }
 
 	private:
 		std::vector<std::shared_ptr<IPlugin>> m_plugins;
-		std::shared_ptr<IntentRouter> m_intentRouter;
+		std::shared_ptr<Router> m_Router;
 	}; // class PluginsContainer
 
 	//-------------------------------------------------------------------------------------------------------
@@ -81,7 +81,7 @@ namespace pp
 		// should register its intent handlers.
 		// @param router - plugin should register its intent handlers 
 		//		in this router.
-		virtual void init(std::shared_ptr<IntentRouter> router) = 0;
+		virtual void init(std::shared_ptr<Router> router) = 0;
 		// Called just before the plugin object is deleted and the 
 		// whole shared library is unloaded. This is the place for 
 		// cleanups and dispatching intents informing desired users 
@@ -92,10 +92,10 @@ namespace pp
 		//		this. The main purpose of this param is to allow plugin
 		//		to dispatch messages to other plugins that may be 
 		//		concerned about the lifetime of this plugin.
-		virtual void deinit(std::shared_ptr<IntentRouter> router) = 0;
+		virtual void deinit(std::shared_ptr<Router> router) = 0;
 
 		// Plugin name and version are only for display purposes and 
-		// might be useful for other IReceiverSelector implementation.
+		// might be useful for other ISelector implementation.
 		virtual PluginInfo getPluginInfo() const = 0;
 
 		// This is PolyPlugin version used by this plugin. If major 
@@ -201,7 +201,7 @@ namespace pp
 	//-------------------------------------------------------------------------------------------------------
 	PluginsContainer::~PluginsContainer()
 	{
-		assert(m_intentRouter.use_count() == 1);
+		assert(m_Router.use_count() == 1);
 		for (const std::shared_ptr<IPlugin>& plugin : m_plugins)
 			assert(plugin.use_count() == 1);
 	}
@@ -215,7 +215,7 @@ namespace pp
 		{
 			if (plugin->usedPolyPluginVersion.major == polyPluginVersion.major)
 			{
-				plugin->init(m_intentRouter);
+				plugin->init(m_Router);
 				result.push_back(plugin);
 				m_plugins.push_back(std::move(plugin));
 			}

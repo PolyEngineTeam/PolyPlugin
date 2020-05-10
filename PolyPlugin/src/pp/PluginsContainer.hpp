@@ -1,10 +1,10 @@
 #pragma once
 
-#include <filesystem>
-#include <windows.h>
-
 #include <CmakeConfig.hpp>
+
+#include <pp/Defines.hpp>
 #include <pp/Router.hpp>
+#include <pp/PluginsLoader.hpp>
 
 namespace pp
 {
@@ -13,8 +13,8 @@ namespace pp
 	//-------------------------------------------------------------------------------------------------------
 	//-------------------------------------------------------------------------------------------------------
 	//-------------------------------------------------------------------------------------------------------
-	// The main class of this library. It allows user to load plugins 
-	// from directory or path and get the intent router to dispatch 
+	// The main class of this library. It allows the user to load plugins 
+	// from a directory or a path and get the intent router to dispatch 
 	// some intents. It also owns the IPlugin instances whereas 
 	// Router only routes intents to correct handlers.
 	class PluginsContainer
@@ -25,13 +25,13 @@ namespace pp
 		// version used by the loaded plugin will be compared to this 
 		// one and if they differ the plugin will be ignored and 
 		// deleted
-		static inline Version polyPluginVersion = { PROJECT_VER_MAJOR, PROJECT_VER_MINOR, PTOJECT_VER_PATCH };
+		static inline Version polyPluginVersion = { PROJECT_VER_MAJOR, PROJECT_VER_MINOR, PROJECT_VER_PATCH };
 
 		// Default ctor. If not provided the Router will be 
 		// created automatically.
 		PluginsContainer() : m_Router(std::make_shared<Router>()) {}
 		
-		// If the user needs custom intent router it can be provided in
+		// If the user needs a custom intent router it can be provided in
 		// this ctor and it will be used instead of the default one
 		// @param router - customized router that should be used by 
 		//		this container
@@ -49,7 +49,7 @@ namespace pp
 		// @param recursive - if this param is true then this method will 
 		//		return shared libraries from not only given directory but 
 		//		also all recursive subdirectories
-		std::vector<std::weak_ptr<IPlugin>> load(std::filesystem::path root, bool reccursive);
+		std::vector<std::weak_ptr<IPlugin>> load(std::filesystem::path root, bool recursive);
 
 		// @returns intent router. Returned router is used to 
 		//		initialize all plugins that were loaded or will be 
@@ -65,8 +65,8 @@ namespace pp
 	//-------------------------------------------------------------------------------------------------------
 	//-------------------------------------------------------------------------------------------------------
 	// Plugin interface. All projects that want to be loaded as plugins
-	// need to override this class and export function from shared 
-	// library with name 'createPolyPlugin'. This function must return 
+	// need to override this class and export the function from shared 
+	// library named 'createPolyPlugin'. This function must return a
 	// pointer to the instance of plugin class (the one derived from 
 	// IPlugin). Plugin is instantiated only once, right after its 
 	// shared library is loaded. It is deinitialized just before 
@@ -76,8 +76,8 @@ namespace pp
 	public:
 		virtual ~IPlugin() = default;
 
-		// Initializes the plugin. Called right after library is loaded
-		// and plugin is created. This is the place where the library 
+		// Initializes the plugin. Called right after the library is loaded
+		// and the plugin is created. This is the place where the library 
 		// should register its intent handlers.
 		// @param router - plugin should register its intent handlers 
 		//		in this router.
@@ -98,8 +98,8 @@ namespace pp
 		// might be useful for other ISelector implementation.
 		virtual PluginInfo getPluginInfo() const = 0;
 
-		// This is PolyPlugin version used by this plugin. If major 
-		// version differs from one saved in PluginsContainer which 
+		// This is the PolyPlugin version used by this plugin. If the major 
+		// version differs from the one saved in PluginsContainer which 
 		// loads this plugin this plugin will be ignored and deleted 
 		// even before init. This field is initialized with version of
 		// PolyPlugin that was used to compile shared library 
@@ -107,96 +107,6 @@ namespace pp
 		// to worry about the value of this field.
 		const Version usedPolyPluginVersion = PluginsContainer::polyPluginVersion;
 	}; // class IPlugin
-
-	// Helper using statement to simplify usage of type of a function 
-	// that is loaded from the shared library and provides instance of
-	// IPlugin.
-	using PluginCreatorType = IPlugin * (__stdcall *)();
-
-	namespace internal
-	{
-		//-------------------------------------------------------------------------------------------------------
-		// @returns paths to all shared libs in given directory and 
-		//		possibly all nested directories.
-		// @param path - path to directory where to search for shared 
-		//		libraries
-		// @param recursive - if this param is true then this method will 
-		//		return shared libraries from not only given directory but 
-		//		also all recursive subdirectories
-		std::vector<std::filesystem::path> getAllSharedLibs(std::filesystem::path path, bool recursive)
-		{
-			if (!std::filesystem::exists(path))
-				return {};
-
-			std::vector<std::filesystem::path> result;
-
-			if (std::filesystem::is_directory(path))
-			{
-				if (recursive)
-				{
-					std::filesystem::recursive_directory_iterator it(path);
-					std::filesystem::recursive_directory_iterator endit;
-
-					while (it != endit)
-					{
-						if (std::filesystem::is_regular_file(*it) && it->path().extension() == ".dll")
-							result.push_back(it->path());
-						++it;
-					}
-				}
-				else
-				{
-					std::filesystem::directory_iterator it(path);
-					std::filesystem::directory_iterator endit;
-
-					while (it != endit)
-					{
-						if (std::filesystem::is_regular_file(*it) && it->path().extension() == ".dll")
-							result.push_back(it->path());
-						++it;
-					}
-				}
-			}
-			else
-			{
-				if (std::filesystem::is_regular_file(path) && path.extension() == ".dll")
-					result.push_back(path);
-			}
-
-			return result;
-		}
-
-		//-------------------------------------------------------------------------------------------------------
-		// @returns collection of loaded plugins from shared libraries 
-		//		existing in the given root directory and possibly all 
-		//		recursive subdirectories if 'recursive' flag is enabled.
-		// @param path - path to directory where to search for shared 
-		//		libraries
-		// @param recursive - if this param is true then this method will 
-		//		return shared libraries from not only given directory but 
-		//		also all recursive subdirectories
-		std::vector<std::shared_ptr<IPlugin>> loadPlugins(std::filesystem::path root, bool recursive)
-		{
-			std::vector<std::shared_ptr<IPlugin>> result;
-
-			for (const std::filesystem::path& path : getAllSharedLibs(root, recursive))
-			{
-				HINSTANCE hGetProcIDDLL = LoadLibrary(LPCSTR(path.string().c_str()));
-				if (!hGetProcIDDLL)
-					continue;
-
-				PluginCreatorType creator = (PluginCreatorType)GetProcAddress(hGetProcIDDLL, "createPolyPlugin");
-				auto w = GetLastError();
-				if (!creator)
-					continue;
-
-				std::shared_ptr<IPlugin> newPlugin(creator());
-				result.push_back(std::move(newPlugin));
-			}
-
-			return result;
-		}
-	}
 
 	//-------------------------------------------------------------------------------------------------------
 	PluginsContainer::~PluginsContainer()
@@ -207,11 +117,11 @@ namespace pp
 	}
 
 	//-------------------------------------------------------------------------------------------------------
-	inline std::vector<std::weak_ptr<IPlugin>> pp::PluginsContainer::load(std::filesystem::path root, bool reccursive)
+	inline std::vector<std::weak_ptr<IPlugin>> pp::PluginsContainer::load(std::filesystem::path root, bool recursive)
 	{
 		std::vector<std::weak_ptr<IPlugin>> result;
 
-		for (std::shared_ptr<IPlugin> plugin : internal::loadPlugins(std::move(root), reccursive))
+		for (std::shared_ptr<IPlugin> plugin : PluginsLoader::loadPlugins(std::move(root), recursive))
 		{
 			if (plugin->usedPolyPluginVersion.major == polyPluginVersion.major)
 			{
@@ -233,4 +143,4 @@ namespace pp
 // needs to be exported from shared library so PolyPlugin will be 
 // able to load IPlugin instance form there.
 #define POLY_PLUGIN_ENTRY \
-		extern "C" __declspec(dllexport) ::pp::IPlugin* __stdcall createPolyPlugin
+		extern "C" PP_EXPORT ::pp::IPlugin* STDCALL createPolyPlugin

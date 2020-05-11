@@ -14,7 +14,9 @@ jobs:
    - name: Install Dependencies (Linux)
      run: |
           sudo apt-get update
-          sudo apt-get install -y -qq software-properties-common gcc g++ cmake
+          sudo apt-get install -y -qq software-properties-common gcc-9 g++-9 cmake
+          echo "::set-env name=CC::gcc-9"
+          echo "::set-env name=CXX::g++-9"
      if: matrix.os == 'ubuntu-latest'    
    - name: Install Dependencies (macOS)
      run: |

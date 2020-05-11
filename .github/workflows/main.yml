@@ -1,0 +1,48 @@
+name: CI
+# This workflow is triggered on pushes to the repository.
+on: [push, pull_request]
+
+jobs:
+  ci:
+   runs-on: ${{ matrix.os }}
+   
+   strategy:
+    matrix:
+        os: [ubuntu-latest, macOS-latest, windows-latest] ## add different compilers
+
+   steps:
+   - name: Install Dependencies (Linux)
+     run: |
+          sudo apt-get update
+          sudo apt-get install -y -qq software-properties-common gcc g++ cmake
+     if: matrix.os == 'ubuntu-latest'    
+   - name: Install Dependencies (macOS)
+     run: |
+          brew update && brew install pkgconfig cmake
+     if: matrix.os == 'macOS-latest'     
+   - name: Install Dependencies (Windows)
+     run: |
+          choco install pkgconfiglite cmake
+     if: matrix.os == 'windows-latest'
+   - name: Get Sources
+     uses: actions/checkout@v2
+     with:
+       submodules: 'true'        
+   - name: Setup CMake
+     run: |
+        mkdir "${{ runner.workspace }}/PolyPlugin/Build" 
+        cd "${{ runner.workspace }}/PolyPlugin/Build" 
+        cmake ../PolyPlugin
+     shell: bash
+   - name: Build
+     run: cmake --build .
+     working-directory: ${{ runner.workspace }}/PolyPlugin/Build
+   - run: ${{ runner.workspace }}/PolyPlugin/Dist/Debug/TestApp.exe
+     name: Test (Windows)
+     if: matrix.os == 'windows-latest'
+   - run: ${{ runner.workspace }}/PolyPlugin/Dist/TestApp
+     name: Test (Linux & macOS)
+     if: matrix.os == 'ubuntu-latest' || matrix.os == 'macOS-latest'
+   - name: Check with clang-tidy
+     if: matrix.os == 'ubuntu-latest' && github.event_name == 'pull_request' # only works for ubuntu and PR's
+     uses: muxee/clang-tidy-action@0.0.1-rc1

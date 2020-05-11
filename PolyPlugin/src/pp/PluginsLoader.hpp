@@ -18,9 +18,9 @@ namespace pp
 		bool isPlugin(const std::filesystem::path& path)
 		{
 		#if defined(_WIN32)
-			return path.extenstion() == ".dll";
+			return path.extension() == ".dll";
 		#elif defined(__APPLE__)
-			return path.extenstion() == ".dylib";
+			return path.extension() == ".dylib";
 		#else
 			return path.extension() == ".so";
 		#endif

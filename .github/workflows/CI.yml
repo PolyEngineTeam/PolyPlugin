@@ -32,7 +32,7 @@ jobs:
      run: |
         mkdir "${{ runner.workspace }}/PolyPlugin/Build" 
         cd "${{ runner.workspace }}/PolyPlugin/Build" 
-        cmake ../PolyPlugin
+        cmake ..
      shell: bash
    - name: Build
      run: cmake --build .

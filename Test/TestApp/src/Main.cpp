@@ -19,6 +19,7 @@ int main()
 		container.load(std::filesystem::path(ownPth).parent_path(), false);
 	}
 #else
+	std::cout << "Current path: " << std::filesystem::current_path() << std::endl;
 	container.load(std::filesystem::current_path(), false);
 #endif
     

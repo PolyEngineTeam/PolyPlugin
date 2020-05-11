@@ -33,7 +33,7 @@ namespace pp
 			if (!hGetProcIDDLL)
 				return false;
 
-			creator = (PluginCreatorType)GetProcAddress(hGetProcIDDLL, "createPolyPlugin");
+			creator = &(PluginCreatorType)GetProcAddress(hGetProcIDDLL, "createPolyPlugin");
 			auto w = GetLastError();
 			if (!creator)
 				return false;

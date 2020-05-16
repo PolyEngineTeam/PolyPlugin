@@ -142,5 +142,8 @@ namespace pp
 // Helper macro for library users. It is declaration of method that 
 // needs to be exported from shared library so PolyPlugin will be 
 // able to load IPlugin instance form there.
-#define POLY_PLUGIN_ENTRY \
-		extern "C" PP_EXPORT ::pp::IPlugin* STDCALL createPolyPlugin
+#define POLY_PLUGIN_ENTRY(PluginName)\
+		extern "C" PP_EXPORT ::pp::IPlugin* STDCALL createPolyPlugin()\
+		{\
+			return new PluginName();\
+		}

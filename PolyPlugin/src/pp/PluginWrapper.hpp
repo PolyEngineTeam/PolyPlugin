@@ -11,7 +11,7 @@ namespace pp
 	// Helper using statement to simplify usage of type of a function 
 	// that is loaded from the shared library and provides instance of
 	// IPlugin.
-	using PluginCreatorType = std::shared_ptr<IPlugin> STDCALL_CAST ();
+	using PluginCreatorType = IPlugin* STDCALL_CAST ();
 
 	class PluginWrapper final
 	{
@@ -40,7 +40,7 @@ namespace pp
 		void operator()() 
 		{ 
 			if (!m_pluginEntry)
-				m_pluginEntry = m_functionPtr();
+				m_pluginEntry = std::shared_ptr<IPlugin>(m_functionPtr());
 		}
 
 		std::shared_ptr<IPlugin> operator->()

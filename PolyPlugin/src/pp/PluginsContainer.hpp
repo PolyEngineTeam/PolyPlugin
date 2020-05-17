@@ -143,7 +143,7 @@ namespace pp
 // needs to be exported from shared library so PolyPlugin will be 
 // able to load IPlugin instance form there.
 #define POLY_PLUGIN_ENTRY(PluginName)\
-		extern "C" PP_EXPORT std::shared_ptr<::pp::IPlugin> STDCALL createPolyPlugin()\
+		extern "C" PP_EXPORT ::pp::IPlugin* STDCALL createPolyPlugin()\
 		{\
-			return std::make_shared<PluginName>();\
+			return new PluginName();\
 		}

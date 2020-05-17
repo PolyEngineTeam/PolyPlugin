@@ -3,18 +3,15 @@
 #include <filesystem>
 
 #include <pp/Defines.hpp>
+#include <pp/PluginWrapper.hpp>
 
 namespace pp
 {
-	class IPlugin;
-
-	// Helper using statement to simplify usage of type of a function 
-	// that is loaded from the shared library and provides instance of
-	// IPlugin.
-	using PluginCreatorType = IPlugin * STDCALL_CAST ();
-
 	namespace PluginsLoader
 	{
+		//-------------------------------------------------------------------------------------------------------
+		// @returns true if it is a plugin type, false otherwise.
+		// @param path - path to the file being checked
 		bool isPlugin(const std::filesystem::path& path)
 		{
 		#if defined(_WIN32)
@@ -23,37 +20,6 @@ namespace pp
 			return path.extension() == ".dylib";
 		#else
 			return path.extension() == ".so";
-		#endif
-		}
-
-		bool loadPlugin(const std::filesystem::path& path, PluginCreatorType*& creator)
-		{
-		#if defined(_WIN32)
-			HINSTANCE hGetProcIDDLL = LoadLibrary(LPCSTR(path.string().c_str()));
-			if (!hGetProcIDDLL)
-				return false;
-
-			creator = &(PluginCreatorType)GetProcAddress(hGetProcIDDLL, "createPolyPlugin");
-			auto w = GetLastError();
-			if (!creator)
-				return false;
-
-			return true;
-		#else
-			void* handle = dlopen(path.string().c_str(), RTLD_NOW);
-			if (const char* err = dlerror())
-				return false;
-
-			void* sym = dlsym(handle, "createPolyPlugin");
-			if (const char* err = dlerror())
-			{
-				dlclose(handle);
-				return false;
-			}
-
-			creator = reinterpret_cast<PluginCreatorType*>(sym);
-
-			return true;
 		#endif
 		}
 
@@ -117,18 +83,18 @@ namespace pp
 		// @param recursive - if this param is true then this method will 
 		//		return shared libraries from not only the given directory but 
 		//		also all recursive subdirectories
-		std::vector<std::shared_ptr<IPlugin>> loadPlugins(std::filesystem::path root, bool recursive)
+		std::vector<std::shared_ptr<PluginWrapper>> loadPlugins(std::filesystem::path root, bool recursive)
 		{
-			std::vector<std::shared_ptr<IPlugin>> result;
+			std::vector<std::shared_ptr<PluginWrapper>> result;
 
 			for (const std::filesystem::path& path : getAllSharedLibs(root, recursive))
 			{
-				PluginCreatorType* creator;
-				if (!loadPlugin(path, creator))
+				PluginWrapper wrapper = PluginWrapper::loadPluginEntryPoint(path);
+				if (!wrapper.isValid())
 					continue;
 
-				std::shared_ptr<IPlugin> newPlugin((*creator)());
-				result.push_back(std::move(newPlugin));
+				wrapper();
+				result.push_back(std::make_shared<PluginWrapper>(std::move(wrapper)));
 			}
 
 			return result;

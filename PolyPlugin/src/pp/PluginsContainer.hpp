@@ -49,7 +49,7 @@ namespace pp
 		// @param recursive - if this param is true then this method will 
 		//		return shared libraries from not only given directory but 
 		//		also all recursive subdirectories
-		std::vector<std::weak_ptr<IPlugin>> load(std::filesystem::path root, bool recursive);
+		std::vector<std::weak_ptr<PluginWrapper>> load(std::filesystem::path root, bool recursive);
 
 		// @returns intent router. Returned router is used to 
 		//		initialize all plugins that were loaded or will be 
@@ -57,7 +57,7 @@ namespace pp
 		const std::shared_ptr<Router>& getRouter() const { return m_Router; }
 
 	private:
-		std::vector<std::shared_ptr<IPlugin>> m_plugins;
+		std::vector<std::shared_ptr<PluginWrapper>> m_plugins;
 		std::shared_ptr<Router> m_Router;
 	}; // class PluginsContainer
 
@@ -112,20 +112,20 @@ namespace pp
 	PluginsContainer::~PluginsContainer()
 	{
 		assert(m_Router.use_count() == 1);
-		for (const std::shared_ptr<IPlugin>& plugin : m_plugins)
+		for (const std::shared_ptr<PluginWrapper>& plugin : m_plugins)
 			assert(plugin.use_count() == 1);
 	}
 
 	//-------------------------------------------------------------------------------------------------------
-	inline std::vector<std::weak_ptr<IPlugin>> pp::PluginsContainer::load(std::filesystem::path root, bool recursive)
+	inline std::vector<std::weak_ptr<PluginWrapper>> pp::PluginsContainer::load(std::filesystem::path root, bool recursive)
 	{
-		std::vector<std::weak_ptr<IPlugin>> result;
+		std::vector<std::weak_ptr<PluginWrapper>> result;
 
-		for (std::shared_ptr<IPlugin> plugin : PluginsLoader::loadPlugins(std::move(root), recursive))
+		for (std::shared_ptr<PluginWrapper> plugin : PluginsLoader::loadPlugins(std::move(root), recursive))
 		{
-			if (plugin->usedPolyPluginVersion.major == polyPluginVersion.major)
+			if ((*plugin)->usedPolyPluginVersion.major == polyPluginVersion.major)
 			{
-				plugin->init(m_Router);
+				(*plugin)->init(m_Router);
 				result.push_back(plugin);
 				m_plugins.push_back(std::move(plugin));
 			}
@@ -143,7 +143,7 @@ namespace pp
 // needs to be exported from shared library so PolyPlugin will be 
 // able to load IPlugin instance form there.
 #define POLY_PLUGIN_ENTRY(PluginName)\
-		extern "C" PP_EXPORT ::pp::IPlugin* STDCALL createPolyPlugin()\
+		extern "C" PP_EXPORT std::shared_ptr<::pp::IPlugin> STDCALL createPolyPlugin()\
 		{\
-			return new PluginName();\
+			return std::make_shared<PluginName>();\
 		}

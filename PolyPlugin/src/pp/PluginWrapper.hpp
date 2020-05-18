@@ -80,12 +80,26 @@ namespace pp
 		}
 
 #if defined(_WIN32)
-		~PluginWrapper() { if (m_libHandle) FreeLibrary(m_libHandle); }
+		~PluginWrapper()
+		{ 
+			if (m_pluginEntry)
+				m_pluginEntry = nullptr;
+
+			if (m_libHandle) 
+				FreeLibrary(m_libHandle);
+		}
 	private:
 		PluginWrapper(HINSTANCE libHandle, PluginCreatorType* funcHandle) : m_libHandle(libHandle), m_functionPtr(funcHandle) {}
 		HINSTANCE m_libHandle = nullptr;
 #else
-		~PluginWrapper() { if (m_libHandle) dlclose(m_libHandle); }
+		~PluginWrapper()
+		{
+			if (m_pluginEntry)
+				m_pluginEntry = nullptr;
+
+			if (m_libHandle) 
+				dlclose(m_libHandle);
+		}
 	private:
 		PluginWrapper(void* libHandle, PluginCreatorType* funcHandle) : m_libHandle(libHandle), m_functionPtr(funcHandle) {}
 		void* m_libHandle = nullptr;

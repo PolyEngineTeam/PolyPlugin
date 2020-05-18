@@ -4,7 +4,7 @@
     #define STDCALL_CAST (__stdcall *)
 #else
     #define STDCALL
-    #define STDCALL_CAST
+    #define STDCALL_CAST (*)
 #endif
 
 // Handle includes

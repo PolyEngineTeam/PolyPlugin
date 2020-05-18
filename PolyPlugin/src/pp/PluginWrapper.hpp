@@ -62,7 +62,7 @@ namespace pp
 			if (!pluginEntry)
 				return PluginWrapper{ nullptr, nullptr };
 
-			return PluginWrapper(libHandle, reinterpret_cast<PluginCreatorType*>(pluginEntry));
+			return PluginWrapper(libHandle, reinterpret_cast<PluginCreatorType>(pluginEntry));
 #else 
 			void* libHandle = dlopen(path.string().c_str(), RTLD_NOW);
 			if (const char* err = dlerror())
@@ -75,7 +75,7 @@ namespace pp
 				return PluginWrapper{ nullptr, nullptr };
 			}
 
-			return PluginWrapper(libHandle, reinterpret_cast<PluginCreatorType*>(pluginEntry));
+			return PluginWrapper(libHandle, reinterpret_cast<PluginCreatorType>(pluginEntry));
 #endif
 		}
 
@@ -89,7 +89,7 @@ namespace pp
 				FreeLibrary(m_libHandle);
 		}
 	private:
-		PluginWrapper(HINSTANCE libHandle, PluginCreatorType* funcHandle) : m_libHandle(libHandle), m_functionPtr(funcHandle) {}
+		PluginWrapper(HINSTANCE libHandle, PluginCreatorType funcHandle) : m_libHandle(libHandle), m_functionPtr(funcHandle) {}
 		HINSTANCE m_libHandle = nullptr;
 #else
 		~PluginWrapper()
@@ -101,11 +101,11 @@ namespace pp
 				dlclose(m_libHandle);
 		}
 	private:
-		PluginWrapper(void* libHandle, PluginCreatorType* funcHandle) : m_libHandle(libHandle), m_functionPtr(funcHandle) {}
+		PluginWrapper(void* libHandle, PluginCreatorType funcHandle) : m_libHandle(libHandle), m_functionPtr(funcHandle) {}
 		void* m_libHandle = nullptr;
 #endif
 		
-		PluginCreatorType* m_functionPtr = nullptr;
+		PluginCreatorType m_functionPtr = nullptr;
 		std::shared_ptr<IPlugin> m_pluginEntry = nullptr;
 	};
 

@@ -13,4 +13,5 @@ target_include_directories(${TEST_APP_TARGET} PUBLIC ${TEST_APP_INCLUDE})
 
 target_link_libraries(${TEST_APP_TARGET} ${POLYPLUGIN_TARGET})
 target_link_libraries(${TEST_APP_TARGET} ${CALCULATOR_PLUGIN_API_TARGET})
+target_link_libraries(${TEST_APP_TARGET} ${CMAKE_DL_LIBS}) # Why though???
 #add_dependencies(${TEST_APP_TARGET} ${CALCULATOR_PLUGIN_TARGET})

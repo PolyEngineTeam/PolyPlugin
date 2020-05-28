@@ -1,21 +1,16 @@
 #include <iostream>
 
 #include <pp/PolyPlugin.hpp>
+#include <pp/Defines.hpp>
 #include <AddIntent.hpp>
-#include <windows.h>
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 int main()
 {
 	pp::PluginsContainer container;
-	char ownPth[MAX_PATH];
 
-	HMODULE hModule = GetModuleHandle(NULL);
-	if (hModule != NULL)
-	{
-		GetModuleFileName(hModule, ownPth, (sizeof(ownPth)));
-		container.load(std::filesystem::path(ownPth).parent_path(), false);
-	}
+	std::cout << "Current path: " << std::filesystem::current_path() << std::endl;
+	container.load(std::filesystem::current_path(), false);
     
 	AddIntent intent{ 2, 3 };
 	std::optional<AddIntent::Result> result = container.getRouter()->processIntent(std::move(intent));

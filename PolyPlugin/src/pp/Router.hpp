@@ -16,7 +16,7 @@ namespace pp
 	//-------------------------------------------------------------------------------------------------------
 	//-------------------------------------------------------------------------------------------------------
 	// This class' purpose is to allow registering/unregistering intent
-	// handlers and provide interface for intent dispatching.
+	// handlers and provide an interface for intent dispatching.
 	class Router
 	{
 	public:
@@ -24,12 +24,12 @@ namespace pp
 		// will always select the first registered intent handler.
 		Router() : m_selector(std::make_shared<Selector>()) {}
 
-		// Allows user to provide custom handler selector.
-		// @parem selector - handler selector provided by user
+		// Allows for the user to provide custom handler selector.
+		// @param selector - handler selector provided by the user
 		Router(std::shared_ptr<Selector> selector) : m_selector(std::move(selector)) {}
 
 		// Registers intent handler in this router. If someone
-		// will dispatch intent with type matching given handler with 
+		// dispatches an intent with type matching given handler with 
 		// 'processIntent' method the registered handler will be sent 
 		// to the selector along with the other handlers matching 
 		// intent type and selector will choose which handler should 
@@ -49,9 +49,9 @@ namespace pp
 		void registerEventReceiver(PluginInfo info, std::function<typename T::Result(const T&)> receiver);
 
 		// This method is used for intents dispatching. When it's 
-		// called it asks handler selector which intent handler 
-		// should be used to process given intent.
-		// @tparem T - type of the intent that needs to be processed
+		// called it asks the handler selector which intent handler 
+		// should be used to process a given intent.
+		// @tparam T - type of the intent that needs to be processed
 		// @returns empty optional if handler for given intent wasn't 
 		//		found or IntentType::Result returned from intent 
 		//		handler.
@@ -86,8 +86,8 @@ namespace pp
 	public:
 		virtual ~Selector() = default;
 
-		// This method is called every time intent router has to 
-		// process the intent.Default implementation chooses the first
+		// This method is called every time the intent router has to 
+		// process the intent. Default implementation chooses the first
 		// handler (the first that was registered for this type of 
 		// intent).
 		// @returns index of the handler present in the given 
@@ -127,11 +127,11 @@ namespace pp
 	{
 		const auto it = m_receivers.find(T::Info);
 		if (it != m_receivers.end())
-			static_cast<ReceiversCollection<T>*>(it->second.get())->push_back({ std::move(info), std::move(handler) });
+			static_cast<ReceiversCollection<T>*>(it->second.get())->push_back({ std::move(info), std::move(receiver) });
 		else
 		{
 			auto newCollection = std::make_unique<ReceiversCollection<T>>();
-			newCollection->push_back({ std::move(info), std::move(handler) });
+			newCollection->push_back({ std::move(info), std::move(receiver) });
 			m_receivers.insert({ T::Info, std::move(newCollection) });
 		}
 	}
